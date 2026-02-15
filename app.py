@@ -5,13 +5,16 @@ import numpy as np
 import base64
 from src.engine import forward_propagation
 from src.translator import WordTranslator
-
+import os
 app = Flask(__name__)
 CORS(app)
 
-# 1. Load trained weights
-parameters = np.load("weights/model_params.npy", allow_pickle=True).item()
-translator = WordTranslator()
+# Get the directory where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+weights_path = os.path.join(BASE_DIR, 'weights', 'model_params.npy')
+
+# Load weights using the absolute path
+parameters = np.load(weights_path, allow_pickle=True).item()
 
 @app.route('/')
 def index():
