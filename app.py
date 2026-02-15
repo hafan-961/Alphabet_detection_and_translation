@@ -1,57 +1,55 @@
+import os, base64, cv2, numpy as np
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import cv2
-import numpy as np
-import base64
 from src.engine import forward_propagation
-from src.translator import WordTranslator
-import os
+from deep_translator import GoogleTranslator
+from textblob import TextBlob
+
 app = Flask(__name__)
 CORS(app)
 
-# Get the directory where app.py is located
+# Load Weights
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-weights_path = os.path.join(BASE_DIR, 'weights', 'model_params.npy')
-
-# Load weights using the absolute path
-parameters = np.load(weights_path, allow_pickle=True).item()
+params = np.load(os.path.join(BASE_DIR, 'weights', 'model_params.npy'), allow_pickle=True).item()
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def index(): return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.json
-    image_b64 = data.get('image')
-    
-    # Process base64 image
-    encoded_data = image_b64.split(',')[1]
-    nparr = np.frombuffer(base64.decodebytes(encoded_data.encode()), np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
-    
-    # Preprocess (Resize & Center)
-    _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
-    coords = cv2.findNonZero(thresh)
-    if coords is not None:
-        x, y, w, h = cv2.boundingRect(coords)
-        roi = thresh[y:y+h, x:x+w]
-        side = max(w, h) + 40
-        square = np.zeros((side, side), dtype="uint8")
-        square[(side-h)//2:(side-h)//2+h, (side-w)//2:(side-w)//2+w] = roi
-        resized = cv2.resize(square, (28, 28))
+    try:
+        data = request.json['image'].split(",")[1]
+        img = cv2.imdecode(np.frombuffer(base64.b64decode(data), np.uint8), cv2.IMREAD_GRAYSCALE)
         
-        x_input = resized.reshape(784, 1) / 255.0
-        AL, _ = forward_propagation(x_input, parameters, 1.0, is_training=False)
-        prediction = np.argmax(AL)
-        char = chr(ord('A') + int(prediction))
+        # Find letters
+        cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = sorted(cnts, key=lambda c: cv2.boundingRect(c)[0])
         
-        # Translate
-        translator.current_word = char
-        spanish = translator.translate_to_spanish()
+        word = ""
+        for c in cnts:
+            x, y, w, h = cv2.boundingRect(c)
+            if h > 10:
+                roi = img[y:y+h, x:x+w]
+                size = max(w, h) + 40
+                sq = np.zeros((size, size), dtype="uint8")
+                sq[(size-h)//2:(size-h)//2+h, (size-w)//2:(size-w)//2+w] = roi
+                # Predict
+                x_in = cv2.resize(sq, (28, 28)).reshape(784, 1) / 255.0
+                AL, _ = forward_propagation(x_in, params, 1.0, False)
+                word += chr(ord('A') + np.argmax(AL))
         
-        return jsonify({'letter': char, 'translation': spanish})
-    return jsonify({'error': 'No input'}), 400
+        # Spell Check individual word
+        corrected = str(TextBlob(word).correct()).upper() if word else ""
+        return jsonify({'english': corrected})
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
-if __name__ == "__main__":
-    app.run()
+@app.route('/translate', methods=['POST'])
+def translate():
+    text = request.json.get('text', '')
+    try:
+        spanish = GoogleTranslator(source='en', target='es').translate(text)
+        return jsonify({'spanish': spanish})
+    except: return jsonify({'spanish': "Error"})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
