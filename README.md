@@ -10,7 +10,7 @@
 
 
 ## 🌟 Project Overview
-This project is an end-to-end implementation of a **Deep Learning Model** (Multi-Layer Perceptron) created entirely without high-level frameworks like TensorFlow or PyTorch. It features an interactive **OpenCV Digital Canvas** where users draw characters. The system recognizes these characters using a custom NumPy-based engine, assembles them into words, and performs instant translation.
+This project is an end-to-end implementation of a Deep Learning Model (Multi-Layer Perceptron) trained on the EMNIST Letters dataset (26 classes), built entirely from scratch without high-level frameworks like TensorFlow or PyTorch. It features an interactive OpenCV Digital Canvas where users draw characters. The system recognizes these handwritten letters using a custom NumPy-based engine, assembles them into words, and performs instant translation to Spanish.
 ---
 # watch demo 👇
 https://github.com/user-attachments/assets/481934cb-1cca-477a-b98e-bed217c5e5ca
