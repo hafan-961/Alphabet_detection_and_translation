@@ -7,12 +7,13 @@
 [![Deployment: Render](https://img.shields.io/badge/Deployment-Render-00b3b0?logo=render&logoColor=white)](https://render.com)
 
 ---
-<img width="1366" height="548" alt="Screenshot 2026-02-16 at 10 24 50 PM" src="https://github.com/user-attachments/assets/3934ac33-dc75-4f22-a540-60a9318df028" />
 
 ## 🌟 Project Overview
 This project is an end-to-end implementation of a **Deep Learning Model** (Multi-Layer Perceptron) created entirely without high-level frameworks like TensorFlow or PyTorch. It features an interactive **OpenCV Digital Canvas** where users draw characters. The system recognizes these characters using a custom NumPy-based engine, assembles them into words, and performs instant translation.
+---
 
-
+# Visual Architecture and Flow Diagram
+<img width="1366" height="548" alt="Screenshot 2026-02-16 at 10 24 50 PM" src="https://github.com/user-attachments/assets/3934ac33-dc75-4f22-a540-60a9318df028" />
 
 ---
 
